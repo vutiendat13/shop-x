@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+{% block title %}Đơn hàng của tôi - Shopx{% endblock %}
+{% block content %}
+<div class="container">
+<div class="section-wrapper" style="margin-top:16px;">
+  <h1 style="font-size:20px;font-weight:700;margin-bottom:20px;">📋 Đơn hàng của tôi</h1>
+  {% if orders %}
+  <table class="orders-table">
+    <thead>
+      <tr>
+        <th>Mã đơn</th>
+        <th>Ngày đặt</th>
+        <th>Tổng tiền</th>
+        <th>Trạng thái</th>
+        <th>Địa chỉ</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for o in orders %}
+      <tr>
+        <td><strong>#{{ o.id }}</strong></td>
+        <td>{{ o.created_at[:16] }}</td>
+        <td style="color:var(--primary);font-weight:600;">{{ "{:,.0f}đ".format(o.total) }}</td>
+        <td>
+          {% if o.status == 'pending' %}
+          <span class="status-badge status-pending">⏳ Chờ xác nhận</span>
+          {% elif o.status == 'shipping' %}
+          <span class="status-badge status-shipping">🚚 Đang giao</span>
+          {% else %}
+          <span class="status-badge status-delivered">✅ Đã giao</span>
+          {% endif %}
+        </td>
+        <td style="font-size:13px;color:var(--text-light);">{{ o.address }}</td>
+        <td><a href="/orders/{{ o.id }}" class="btn btn-outline btn-sm">Chi tiết</a></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <div style="text-align:center;padding:60px;">
+    <div style="font-size:60px;margin-bottom:16px;">📦</div>
+    <h3>Bạn chưa có đơn hàng nào</h3>
+    <p style="color:var(--text-light);margin:12px 0 20px;">Hãy bắt đầu mua sắm ngay!</p>
+    <a href="/products" class="btn btn-primary">Khám phá sản phẩm</a>
+  </div>
+  {% endif %}
+</div>
+</div>
+{% endblock %}

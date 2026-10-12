@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Thông báo - Admin</title>
+<link rel="stylesheet" href="/static/css/main.css">
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+<div class="admin-layout">
+  <aside class="admin-sidebar">
+    <a href="/" class="logo" style="display:flex;align-items:baseline;gap:2px;padding:20px;border-bottom:1px solid rgba(255,255,255,.1);">
+      <span class="logo-text">Shop</span><span class="logo-x">x</span><span class="logo-sub" style="color:#67e8f9;border-color:rgba(103,232,249,.3);">Admin</span>
+    </a>
+    <nav class="admin-nav">
+      <a href="/admin">📊 Dashboard</a>
+      <a href="/admin/products">📦 Sản phẩm</a>
+      <a href="/admin/inventory">📋 Tồn kho</a>
+      <a href="/admin/orders">🛒 Đơn hàng</a>
+      <a href="/admin/flash-sales">⚡ Flash Sale</a>
+      <a href="/admin/notifications" class="active">🔔 Thông báo</a>
+      <a href="/">🏠 Về trang chủ</a>
+      <a href="/logout">🚪 Đăng xuất</a>
+    </nav>
+  </aside>
+  <div class="admin-content">
+    <div class="admin-topbar">
+      <h1 style="font-size:20px;font-weight:700;">🔔 Quản lý thông báo</h1>
+    </div>
+    <div class="admin-body">
+      <div style="display:grid;grid-template-columns:380px 1fr;gap:16px;">
+        <div class="admin-card" style="align-self:start;">
+          <div class="admin-card-header"><h2>Tạo thông báo mới</h2></div>
+          <div style="padding:20px;">
+            <form method="POST">
+              <div class="form-group">
+                <label>Loại thông báo</label>
+                <select name="type" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;font-family:inherit;">
+                  <option value="banner">📢 Banner (hiển thị trên đầu trang)</option>
+                  <option value="popup">🎉 Popup (hiện khi vào trang)</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Tiêu đề</label>
+                <input type="text" name="title" required placeholder="VD: 🎉 Siêu sale hôm nay!">
+              </div>
+              <div class="form-group">
+                <label>Nội dung</label>
+                <textarea name="message" rows="3" required placeholder="Nội dung thông báo..." style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;font-family:inherit;"></textarea>
+              </div>
+              <button type="submit" class="btn btn-primary" style="width:100%;">🔔 Tạo thông báo</button>
+            </form>
+          </div>
+        </div>
+
+        <div class="admin-card">
+          <div class="admin-card-header"><h2>Danh sách thông báo</h2></div>
+          <table class="admin-table">
+            <thead>
+              <tr><th>ID</th><th>Loại</th><th>Tiêu đề</th><th>Nội dung</th><th>Trạng thái</th><th>Ngày tạo</th><th>Bật/Tắt</th></tr>
+            </thead>
+            <tbody>
+              {% for n in notifications %}
+              <tr>
+                <td>{{ n.id }}</td>
+                <td>
+                  {% if n.type == 'banner' %}<span class="status-badge status-shipping">Banner</span>
+                  {% else %}<span class="status-badge status-pending">Popup</span>{% endif %}
+                </td>
+                <td style="font-weight:600;max-width:150px;">{{ n.title }}</td>
+                <td style="font-size:12px;color:var(--text-light);max-width:200px;">{{ n.message[:80] }}...</td>
+                <td>
+                  {% if n.active %}<span class="status-badge status-delivered">Đang hiển thị</span>
+                  {% else %}<span class="status-badge" style="background:#eee;color:#999;">Đã tắt</span>{% endif %}
+                </td>
+                <td style="font-size:12px;color:var(--text-light);">{{ n.created_at[:10] }}</td>
+                <td>
+                  <form method="POST" action="/admin/notifications/toggle/{{ n.id }}">
+                    <button type="submit" class="btn btn-sm {{ 'btn-danger' if n.active else 'btn-primary' }}">
+                      {{ 'Tắt' if n.active else 'Bật' }}
+                    </button>
+                  </form>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

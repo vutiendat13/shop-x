@@ -1,0 +1,152 @@
+{% extends 'base.html' %}
+{% block title %}Thanh toán - Shopx{% endblock %}
+{% block content %}
+<div class="container">
+<div class="checkout-form" style="margin-top:16px;">
+  <div>
+    <div class="checkout-card">
+      <h2 style="font-size:17px;font-weight:700;margin-bottom:20px;">📦 Thông tin giao hàng</h2>
+      <div class="form-group">
+        <label>Họ tên người nhận</label>
+        <input type="text" id="recv_name" value="{{ session.user_name }}" placeholder="Họ và tên">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Số điện thoại</label>
+          <input type="tel" id="recv_phone" placeholder="0901234567">
+        </div>
+        <div class="form-group">
+          <label>Tỉnh/Thành phố</label>
+          <select id="recv_city" onchange="updateAddress()">
+            <option>Hà Nội</option><option>TP. Hồ Chí Minh</option><option>Đà Nẵng</option>
+            <option>Hải Phòng</option><option>Cần Thơ</option><option>Khác</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Địa chỉ cụ thể</label>
+        <input type="text" id="recv_address" placeholder="Số nhà, đường, phường/xã, quận/huyện...">
+      </div>
+    </div>
+
+    <div class="checkout-card" style="margin-top:16px;">
+      <h2 style="font-size:17px;font-weight:700;margin-bottom:16px;">💳 Phương thức thanh toán</h2>
+      <input type="hidden" id="paymentMethod" value="cod">
+
+      <div class="payment-card selected" onclick="selectPayment('cod')" id="cod-card">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <span style="font-size:24px;">💵</span>
+          <div>
+            <div style="font-weight:600;">Thanh toán khi nhận hàng (COD)</div>
+            <div style="font-size:12px;color:var(--text-light);">Trả tiền mặt khi nhận hàng</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="payment-card" onclick="selectPayment('card'); document.getElementById('cod-card').classList.remove('selected'); this.classList.add('selected');" style="margin-top:12px;">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <span style="font-size:24px;">💳</span>
+          <div>
+            <div style="font-weight:600;">Thẻ tín dụng / Ghi nợ</div>
+            <div style="font-size:12px;color:var(--text-light);">Visa, Mastercard, JCB</div>
+          </div>
+        </div>
+        <div class="card-form" id="cardForm">
+          <div class="form-group" style="margin-top:12px;">
+            <label>Số thẻ</label>
+            <input type="text" id="cardNumber" placeholder="1234 5678 9012 3456" maxlength="19" oninput="formatCard(this)">
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Ngày hết hạn</label>
+              <input type="text" placeholder="MM/YY" maxlength="5">
+            </div>
+            <div class="form-group">
+              <label>CVV</label>
+              <input type="text" placeholder="123" maxlength="3">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Tên chủ thẻ</label>
+            <input type="text" placeholder="NGUYEN VAN A">
+          </div>
+          <div style="background:#fff3e0;border:1px solid #ffb74d;padding:10px 14px;border-radius:6px;font-size:12px;color:#e65100;margin-top:8px;">
+            🔒 Thông tin thẻ được mã hóa và bảo mật. Đây là form demo - thông tin không được lưu trữ.
+          </div>
+        </div>
+      </div>
+
+      <div class="payment-card" onclick="selectPayment('momo'); document.getElementById('cod-card').classList.remove('selected'); document.querySelectorAll('.payment-card').forEach(c=>c.classList.remove('selected')); this.classList.add('selected');" style="margin-top:12px;">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <span style="font-size:24px;">📱</span>
+          <div>
+            <div style="font-weight:600;">Ví MoMo / ZaloPay</div>
+            <div style="font-size:12px;color:var(--text-light);">Thanh toán qua ví điện tử</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div>
+    <div class="checkout-card" style="position:sticky;top:80px;">
+      <h2 style="font-size:17px;font-weight:700;margin-bottom:16px;">🧾 Tóm tắt đơn hàng</h2>
+      {% for item in items %}
+      <div style="display:flex;gap:10px;margin-bottom:12px;align-items:center;">
+        <img src="{{ item.image }}" style="width:48px;height:48px;object-fit:cover;border-radius:4px;" onerror="this.src='https://picsum.photos/48/48?random={{ item.product_id }}'">
+        <div style="flex:1;font-size:13px;line-height:1.3;">{{ item.name }}</div>
+        <div style="font-size:13px;font-weight:600;color:var(--primary);white-space:nowrap;">x{{ item.quantity }}</div>
+      </div>
+      {% endfor %}
+      <div style="border-top:1px solid var(--border);margin-top:12px;padding-top:12px;">
+        <div style="display:flex;justify-content:space-between;margin-bottom:8px;font-size:13px;">
+          <span style="color:var(--text-light);">Tạm tính</span>
+          <span>{{ "{:,.0f}đ".format(total) }}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:8px;font-size:13px;">
+          <span style="color:var(--text-light);">Phí vận chuyển</span>
+          <span style="color:#4caf50;">Miễn phí</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-top:12px;padding-top:12px;border-top:1px solid var(--border);">
+          <span style="font-weight:700;font-size:15px;">Tổng cộng</span>
+          <span style="font-weight:700;font-size:20px;color:var(--primary);">{{ "{:,.0f}đ".format(total) }}</span>
+        </div>
+      </div>
+      <button onclick="submitCheckout()" class="btn btn-primary" style="width:100%;margin-top:16px;padding:14px;">
+        ✅ Đặt hàng ngay
+      </button>
+      <div style="text-align:center;margin-top:10px;font-size:11px;color:var(--text-light);">
+        Bằng cách đặt hàng, bạn đồng ý với điều khoản của Shopx
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<div class="modal" id="orderSuccessModal">
+  <div class="modal-box" style="text-align:center;max-width:420px;">
+    <div style="font-size:72px;margin-bottom:16px;">🎉</div>
+    <h2 style="color:var(--primary);font-size:22px;margin-bottom:8px;">Đặt hàng thành công!</h2>
+    <p style="color:var(--text-light);margin-bottom:8px;">Mã đơn hàng: <strong id="successOrderId" style="color:var(--text);"></strong></p>
+    <p style="color:var(--text-light);font-size:13px;margin-bottom:24px;">Cảm ơn bạn đã mua hàng! Chúng tôi sẽ xử lý đơn hàng sớm nhất có thể.</p>
+    <div style="display:flex;gap:12px;justify-content:center;">
+      <a href="/orders" class="btn btn-outline">Xem đơn hàng</a>
+      <a href="/" class="btn btn-primary">Tiếp tục mua sắm</a>
+    </div>
+  </div>
+</div>
+
+<script>
+function formatCard(inp) {
+  let v = inp.value.replace(/\D/g, '').substring(0, 16);
+  inp.value = v.replace(/(.{4})/g, '$1 ').trim();
+}
+function updateAddress() {}
+function selectPayment(type) {
+  document.querySelectorAll('.payment-card').forEach(c => c.classList.remove('selected'));
+  event.currentTarget.classList.add('selected');
+  document.getElementById('cardForm').classList.toggle('show', type === 'card');
+  document.getElementById('paymentMethod').value = type;
+}
+</script>
+{% endblock %}

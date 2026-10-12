@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+{% block title %}Tìm kiếm sản phẩm - Shopx{% endblock %}
+{% block content %}
+<div class="container">
+<div class="search-page">
+  <aside class="filter-sidebar">
+    <div class="filter-title">🔍 Bộ lọc tìm kiếm</div>
+    <form method="GET" action="/products" id="filterForm">
+      <input type="hidden" name="q" value="{{ q }}">
+      <div class="filter-group">
+        <label>Danh mục</label>
+        <select name="cat" onchange="this.form.submit()">
+          <option value="">Tất cả</option>
+          {% for c in categories %}
+          <option value="{{ c.id }}" {{ 'selected' if cat == c.id|string }}>{{ c.icon }} {{ c.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="filter-group">
+        <label>Giá tối thiểu (đ)</label>
+        <input type="number" name="min_price" value="{{ min_price }}" placeholder="0">
+      </div>
+      <div class="filter-group">
+        <label>Giá tối đa (đ)</label>
+        <input type="number" name="max_price" value="{{ max_price }}" placeholder="99999999">
+      </div>
+      <div class="filter-group">
+        <label>Đánh giá tối thiểu</label>
+        <select name="min_rating">
+          <option value="">Tất cả</option>
+          <option value="4" {{ 'selected' if min_rating=='4' }}>⭐⭐⭐⭐ trở lên</option>
+          <option value="3" {{ 'selected' if min_rating=='3' }}>⭐⭐⭐ trở lên</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label><input type="checkbox" name="sale" value="1" {{ 'checked' if sale_only }}> Chỉ hàng sale</label>
+      </div>
+      <button type="submit" class="btn btn-primary" style="width:100%;margin-top:8px;">Áp dụng</button>
+      <a href="/products{{ '?q=' + q if q else '' }}" class="btn btn-outline" style="width:100%;margin-top:8px;display:block;text-align:center;">Xóa lọc</a>
+    </form>
+  </aside>
+
+  <div>
+    {% if q %}
+    <div style="padding:8px 0;color:var(--text-light);font-size:13px;">
+      Kết quả tìm kiếm cho "<strong style="color:var(--text)">{{ q }}</strong>" — {{ total }} sản phẩm
+    </div>
+    {% endif %}
+
+    <div class="sort-bar">
+      <span style="color:var(--text-light);font-size:13px;">Sắp xếp:</span>
+      <a href="?{{ request.query_string.decode().replace('sort=hot','').replace('sort=new','').replace('sort=price_asc','').replace('sort=price_desc','') }}&sort=hot" class="sort-btn {{ 'active' if sort == 'hot' }}">Phổ biến</a>
+      <a href="?{{ request.query_string.decode().replace('sort=hot','').replace('sort=new','').replace('sort=price_asc','').replace('sort=price_desc','') }}&sort=new" class="sort-btn {{ 'active' if sort == 'new' }}">Mới nhất</a>
+      <a href="?{{ request.query_string.decode().replace('sort=hot','').replace('sort=new','').replace('sort=price_asc','').replace('sort=price_desc','') }}&sort=price_asc" class="sort-btn {{ 'active' if sort == 'price_asc' }}">Giá thấp</a>
+      <a href="?{{ request.query_string.decode().replace('sort=hot','').replace('sort=new','').replace('sort=price_asc','').replace('sort=price_desc','') }}&sort=price_desc" class="sort-btn {{ 'active' if sort == 'price_desc' }}">Giá cao</a>
+    </div>
+
+    {% if products %}
+    <div class="product-grid">
+      {% for p in products %}
+      <div class="product-card">
+        <button class="wishlist-btn {{ 'active' if p.id in wishlist_ids }}" onclick="event.stopPropagation(); toggleWishlist({{ p.id }}, this)">{{ '❤️' if p.id in wishlist_ids else '🤍' }}</button>
+        <img class="product-img" src="{{ p.image }}" alt="{{ p.name }}" onclick="location.href='/product/{{ p.id }}'" onerror="this.src='https://picsum.photos/400/400?random={{ p.id }}'">
+        <div class="product-info">
+          <div class="product-name" onclick="location.href='/product/{{ p.id }}'">{{ p.name }}</div>
+          <div class="product-price">
+            {% if p.sale_price %}
+            <span class="price-current">{{ "{:,.0f}đ".format(p.sale_price) }}</span>
+            <span class="price-original">{{ "{:,.0f}đ".format(p.price) }}</span>
+            <span class="price-badge">-{{ ((p.price - p.sale_price) / p.price * 100)|int }}%</span>
+            {% else %}
+            <span class="price-current">{{ "{:,.0f}đ".format(p.price) }}</span>
+            {% endif %}
+          </div>
+          <div class="product-sold">Đã bán {{ p.sold }} | Còn {{ p.stock }}</div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+    {% if total_pages > 1 %}
+    <div class="pagination">
+      {% if page > 1 %}
+      <a href="?{{ request.query_string.decode().replace('page='+page|string, '') }}&page={{ page - 1 }}" class="page-btn">‹</a>
+      {% endif %}
+      {% for i in range(1, total_pages + 1) %}
+      {% if i <= 3 or i >= total_pages - 1 or (i >= page - 1 and i <= page + 1) %}
+      <a href="?{{ request.query_string.decode().replace('page='+page|string, '') }}&page={{ i }}" class="page-btn {{ 'active' if i == page }}">{{ i }}</a>
+      {% endif %}
+      {% endfor %}
+      {% if page < total_pages %}
+      <a href="?{{ request.query_string.decode().replace('page='+page|string, '') }}&page={{ page + 1 }}" class="page-btn">›</a>
+      {% endif %}
+    </div>
+    {% endif %}
+
+    {% else %}
+    <div style="text-align:center;padding:80px 20px;color:var(--text-light);">
+      <div style="font-size:64px;margin-bottom:16px;">😔</div>
+      <h3>Không tìm thấy sản phẩm nào</h3>
+      <p style="margin-top:8px;">Thử tìm kiếm với từ khóa khác hoặc thay đổi bộ lọc</p>
+    </div>
+    {% endif %}
+  </div>
+</div>
+</div>
+{% endblock %}

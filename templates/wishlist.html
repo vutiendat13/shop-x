@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+{% block title %}Yêu thích - Shopx{% endblock %}
+{% block content %}
+<div class="container">
+<div class="section-wrapper" style="margin-top:16px;">
+  <h1 style="font-size:20px;font-weight:700;margin-bottom:20px;">❤️ Sản phẩm yêu thích</h1>
+  {% if items %}
+  <div class="wishlist-grid">
+    {% for p in items %}
+    <div class="product-card">
+      <button class="wishlist-btn active" onclick="toggleWishlist({{ p.id }}, this); this.closest('.product-card').remove();">❤️</button>
+      <img class="product-img" src="{{ p.image }}" alt="{{ p.name }}" onclick="location.href='/product/{{ p.id }}'" onerror="this.src='https://picsum.photos/200/200?random={{ p.id }}'">
+      <div class="product-info">
+        <div class="product-name" onclick="location.href='/product/{{ p.id }}'">{{ p.name }}</div>
+        <div class="product-price">
+          {% if p.sale_price %}
+          <span class="price-current">{{ "{:,.0f}đ".format(p.sale_price) }}</span>
+          <span class="price-original">{{ "{:,.0f}đ".format(p.price) }}</span>
+          <span class="price-badge">-{{ ((p.price - p.sale_price) / p.price * 100)|int }}%</span>
+          {% else %}
+          <span class="price-current">{{ "{:,.0f}đ".format(p.price) }}</span>
+          {% endif %}
+        </div>
+        <button class="btn btn-primary btn-sm" style="width:100%;margin-top:8px;" onclick="addToCart({{ p.id }})">🛒 Thêm vào giỏ</button>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div style="text-align:center;padding:60px;">
+    <div style="font-size:60px;margin-bottom:16px;">💔</div>
+    <h3>Danh sách yêu thích trống</h3>
+    <p style="color:var(--text-light);margin:12px 0 20px;">Hãy nhấn ❤️ vào sản phẩm bạn thích!</p>
+    <a href="/products" class="btn btn-primary">Khám phá sản phẩm</a>
+  </div>
+  {% endif %}
+</div>
+</div>
+{% endblock %}

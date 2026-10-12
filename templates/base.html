@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% block title %}Shopx{% endblock %}</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+{% if messages %}
+<div class="flash-container">
+{% for category, message in messages %}
+<div class="flash flash-{{ category }}">{{ message }}</div>
+{% endfor %}
+</div>
+{% endif %}
+{% endwith %}
+
+<header class="header">
+  <div class="header-top">
+    <div class="container">
+      <div class="header-top-links">
+        <span>Kênh người bán</span>
+        <span>|</span>
+        <span>Tải ứng dụng</span>
+        <span>|</span>
+        <span>Kết nối</span>
+      </div>
+      <div class="header-top-right">
+        {% if session.user_id %}
+        <a href="{{ url_for('orders') }}">Đơn mua</a>
+        <a href="{{ url_for('wishlist') }}">Yêu thích</a>
+        <a href="{{ url_for('profile') }}">{{ session.user_name }}</a>
+        {% if session.is_admin %}<a href="{{ url_for('admin_dashboard') }}">Quản trị</a>{% endif %}
+        <a href="{{ url_for('logout') }}">Đăng xuất</a>
+        {% else %}
+        <a href="{{ url_for('register') }}">Đăng ký</a>
+        <span>|</span>
+        <a href="{{ url_for('login') }}">Đăng nhập</a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  <div class="header-main">
+    <div class="container">
+      <a href="{{ url_for('index') }}" class="logo">
+        <span class="logo-text">Shopx</span>
+        <span class="logo-sub">VN</span>
+      </a>
+      <div class="search-box">
+        <input type="text" id="searchInput" placeholder="Tìm kiếm sản phẩm..." autocomplete="off">
+        <button onclick="doSearch()">🔍</button>
+        <div class="search-dropdown" id="searchDropdown"></div>
+      </div>
+      <a href="{{ url_for('cart') }}" class="cart-btn">
+        🛒 <span class="cart-count" id="cartCount">0</span>
+      </a>
+    </div>
+  </div>
+  <nav class="header-nav">
+    <div class="container">
+      <a href="{{ url_for('products') }}">Tất cả sản phẩm</a>
+      <a href="{{ url_for('products', sale=1) }}">🔥 Sale</a>
+      <a href="{{ url_for('products', sort='new') }}">Hàng mới</a>
+      {% for cat in range(1, 18) %}{% endfor %}
+    </div>
+  </nav>
+</header>
+
+<main class="main-content">
+{% block content %}{% endblock %}
+</main>
+
+<footer class="footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div>
+        <h3>Chăm sóc khách hàng</h3>
+        <ul>
+          <li>Trung tâm trợ giúp</li>
+          <li>Shopx Blog</li>
+          <li>Hướng dẫn mua hàng</li>
+        </ul>
+      </div>
+      <div>
+        <h3>Về Shopx</h3>
+        <ul>
+          <li>Giới thiệu</li>
+          <li>Tuyển dụng</li>
+          <li>Điều khoản dịch vụ</li>
+        </ul>
+      </div>
+      <div>
+        <h3>Thanh toán</h3>
+        <div class="payment-icons">💳 🏦 📱 💵</div>
+      </div>
+      <div>
+        <h3>Theo dõi chúng tôi</h3>
+        <div class="social-links">📘 📸 🎬 📺</div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>© 2024 Shopx. Demo Website.</p>
+    </div>
+  </div>
+</footer>
+
+<div class="chatbot-container" id="chatbot">
+  <div class="chatbot-toggle" onclick="toggleChat()">💬</div>
+  <div class="chatbot-box" id="chatbotBox" style="display:none">
+    <div class="chatbot-header">
+      <span>🤖 ShopxBot</span>
+      <button onclick="toggleChat()">✕</button>
+    </div>
+    <div class="chatbot-messages" id="chatMessages">
+      <div class="bot-msg">Xin chào! Tôi là ShopxBot 🤖 Tôi có thể giúp bạn tìm sản phẩm hoặc trả lời câu hỏi!</div>
+    </div>
+    <div class="chatbot-input">
+      <input type="text" id="chatInput" placeholder="Nhập tin nhắn..." onkeypress="if(event.key==='Enter')sendChat()">
+      <button onclick="sendChat()">➤</button>
+    </div>
+  </div>
+</div>
+
+<button class="back-to-top" id="backToTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Lên đầu trang">↑</button>
+
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+<script>
+window.addEventListener('scroll', () => {
+  const btn = document.getElementById('backToTop');
+  if (btn) btn.classList.toggle('show', window.scrollY > 400);
+});
+
+// Highlight active nav
+const path = window.location.pathname;
+document.querySelectorAll('.header-nav a').forEach(a => {
+  if (a.getAttribute('href') === path) a.classList.add('nav-active');
+});
+
+// Auto-dismiss flash messages
+setTimeout(() => {
+  document.querySelectorAll('.flash').forEach(el => {
+    el.style.transition = 'opacity .5s';
+    el.style.opacity = '0';
+    setTimeout(() => el.remove(), 500);
+  });
+}, 3500);
+</script>
+</body>
+</html>

@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Dashboard - Shopx</title>
+<link rel="stylesheet" href="/static/css/main.css">
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+<div class="admin-layout">
+  <aside class="admin-sidebar">
+    <a href="/" class="logo" style="display:flex;align-items:baseline;gap:2px;padding:20px;border-bottom:1px solid rgba(255,255,255,.1);">
+      <span class="logo-text">Shop</span><span class="logo-x">x</span><span class="logo-sub" style="color:#67e8f9;border-color:rgba(103,232,249,.3);">Admin</span>
+    </a>
+    <nav class="admin-nav">
+      <a href="/admin" class="active">📊 Dashboard</a>
+      <a href="/admin/products">📦 Sản phẩm</a>
+      <a href="/admin/inventory">📋 Tồn kho</a>
+      <a href="/admin/orders">🛒 Đơn hàng</a>
+      <a href="/admin/flash-sales">⚡ Flash Sale</a>
+      <a href="/admin/notifications">🔔 Thông báo</a>
+      <a href="/" style="margin-top:auto;border-top:1px solid rgba(255,255,255,.1);">🏠 Về trang chủ</a>
+      <a href="/logout">🚪 Đăng xuất</a>
+    </nav>
+  </aside>
+  <div class="admin-content">
+    <div class="admin-topbar">
+      <h1 style="font-size:20px;font-weight:700;">📊 Tổng quan</h1>
+      <span style="font-size:13px;color:var(--text-light);">Xin chào, Admin 👋</span>
+    </div>
+    <div class="admin-body">
+      <div class="stat-cards">
+        <div class="stat-card">
+          <div class="stat-value">{{ "{:,.0f}đ".format(total_revenue) }}</div>
+          <div class="stat-label">Tổng doanh thu</div>
+        </div>
+        <div class="stat-card" style="border-left-color:#2196f3;">
+          <div class="stat-value" style="color:#2196f3;">{{ total_orders }}</div>
+          <div class="stat-label">Tổng đơn hàng</div>
+        </div>
+        <div class="stat-card" style="border-left-color:#4caf50;">
+          <div class="stat-value" style="color:#4caf50;">{{ total_products }}</div>
+          <div class="stat-label">Sản phẩm</div>
+        </div>
+        <div class="stat-card" style="border-left-color:#ff9800;">
+          <div class="stat-value" style="color:#ff9800;">{{ total_users }}</div>
+          <div class="stat-label">Người dùng</div>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:2fr 1fr;gap:16px;margin-bottom:24px;">
+        <div class="admin-card">
+          <div class="admin-card-header"><h2>📈 Doanh thu 7 ngày gần nhất</h2></div>
+          <div style="padding:20px;">
+            <canvas id="revenueChart" height="100"></canvas>
+          </div>
+        </div>
+        <div class="admin-card">
+          <div class="admin-card-header"><h2>🏆 Sản phẩm bán chạy</h2></div>
+          <div style="padding:0;">
+            <table class="admin-table">
+              <thead><tr><th>Sản phẩm</th><th>Đã bán</th></tr></thead>
+              <tbody>
+                {% for p in top_products %}
+                <tr>
+                  <td style="font-size:13px;">{{ p.name[:30] }}{% if p.name|length > 30 %}...{% endif %}</td>
+                  <td><strong style="color:var(--primary);">{{ p.sold }}</strong></td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="admin-card">
+        <div class="admin-card-header">
+          <h2>🛒 Đơn hàng gần đây</h2>
+          <a href="/admin/orders" class="btn btn-outline btn-sm">Xem tất cả</a>
+        </div>
+        <table class="admin-table">
+          <thead>
+            <tr><th>Mã đơn</th><th>Khách hàng</th><th>Tổng tiền</th><th>Trạng thái</th><th>Ngày đặt</th></tr>
+          </thead>
+          <tbody>
+            {% for o in recent_orders %}
+            <tr>
+              <td><strong>#{{ o.id }}</strong></td>
+              <td>{{ o.user_name }}</td>
+              <td style="color:var(--primary);font-weight:600;">{{ "{:,.0f}đ".format(o.total) }}</td>
+              <td>
+                {% if o.status == 'pending' %}<span class="status-badge status-pending">Chờ xác nhận</span>
+                {% elif o.status == 'shipping' %}<span class="status-badge status-shipping">Đang giao</span>
+                {% else %}<span class="status-badge status-delivered">Đã giao</span>{% endif %}
+              </td>
+              <td style="font-size:12px;color:var(--text-light);">{{ o.created_at[:16] }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const labels = {{ daily_revenue | map(attribute='day') | list | tojson }};
+const revenues = {{ daily_revenue | map(attribute='revenue') | list | tojson }};
+const counts = {{ daily_revenue | map(attribute='count') | list | tojson }};
+const ctx = document.getElementById('revenueChart').getContext('2d');
+new Chart(ctx, {
+  type: 'bar',
+  data: {
+    labels: labels.reverse(),
+    datasets: [{
+      label: 'Doanh thu (đ)',
+      data: revenues.reverse(),
+      backgroundColor: 'rgba(238,77,45,0.2)',
+      borderColor: '#ee4d2d',
+      borderWidth: 2,
+      borderRadius: 4,
+      yAxisID: 'y'
+    }, {
+      label: 'Số đơn',
+      data: counts.reverse(),
+      type: 'line',
+      borderColor: '#2196f3',
+      backgroundColor: 'rgba(33,150,243,0.1)',
+      borderWidth: 2,
+      tension: 0.4,
+      yAxisID: 'y1'
+    }]
+  },
+  options: {
+    responsive: true,
+    interaction: { mode: 'index', intersect: false },
+    plugins: { legend: { position: 'top' } },
+    scales: {
+      y: { type: 'linear', display: true, position: 'left', ticks: { callback: v => (v/1000).toFixed(0) + 'k' } },
+      y1: { type: 'linear', display: true, position: 'right', grid: { drawOnChartArea: false } }
+    }
+  }
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,173 @@
+{% extends 'base.html' %}
+{% block title %}{{ product.name }} - Shopx{% endblock %}
+{% block content %}
+<div class="container">
+<div class="product-detail">
+  <div class="product-detail-inner">
+    <div>
+      <img class="product-main-img" src="{{ product.image }}" alt="{{ product.name }}" onerror="this.src='https://picsum.photos/400/400?random={{ product.id }}'">
+      {% if product.video %}
+      <video src="{{ product.video }}" controls style="width:100%;margin-top:12px;border-radius:8px;"></video>
+      {% endif %}
+    </div>
+    <div>
+      {% if product.cat_name %}
+      <div style="font-size:12px;color:var(--text-light);margin-bottom:8px;">
+        <a href="/">Trang chủ</a> › <a href="/products?cat={{ product.category_id }}">{{ product.cat_name }}</a>
+      </div>
+      {% endif %}
+      <h1 class="product-detail-name">{{ product.name }}</h1>
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
+        <span style="color:#f5a623;font-size:18px;">{{ '★' * avg_rating|int }}{{ '☆' * (5 - avg_rating|int) }}</span>
+        <span style="color:var(--text-light);font-size:13px;">({{ reviews|length }} đánh giá) | Đã bán {{ product.sold }}</span>
+      </div>
+      <div class="product-detail-price">
+        {% if product.sale_price %}
+        <span class="detail-price-current">{{ "{:,.0f}đ".format(product.sale_price) }}</span>
+        <span class="detail-price-original">{{ "{:,.0f}đ".format(product.price) }}</span>
+        <span class="detail-discount">-{{ ((product.price - product.sale_price) / product.price * 100)|int }}%</span>
+        {% else %}
+        <span class="detail-price-current">{{ "{:,.0f}đ".format(product.price) }}</span>
+        {% endif %}
+      </div>
+
+      {% if product.description %}
+      <div style="margin-bottom:20px;padding:16px;background:var(--bg);border-radius:8px;">
+        <h3 style="font-size:14px;margin-bottom:8px;color:var(--text-light);">Mô tả sản phẩm</h3>
+        <p style="font-size:14px;line-height:1.6;">{{ product.description }}</p>
+      </div>
+      {% endif %}
+
+      <div style="margin-bottom:20px;">
+        <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:8px;">
+          <span style="color:var(--text-light);">Còn lại</span>
+          <span style="font-weight:600;">{{ product.stock }} sản phẩm</span>
+        </div>
+      </div>
+
+      <div class="qty-control">
+        <span style="font-size:13px;color:var(--text-light);margin-right:8px;">Số lượng</span>
+        <button class="qty-btn" onclick="changeQty(-1)">-</button>
+        <input type="number" id="detailQty" class="qty-input" value="1" min="1" max="{{ product.stock }}">
+        <button class="qty-btn" onclick="changeQty(1)">+</button>
+      </div>
+
+      <div class="action-btns">
+        <button class="btn btn-outline" onclick="addToCart({{ product.id }}, parseInt(document.getElementById('detailQty').value))">
+          🛒 Thêm vào giỏ
+        </button>
+        <button class="btn btn-primary" onclick="buyNow({{ product.id }})">
+          ⚡ Mua ngay
+        </button>
+        <button class="wishlist-btn {{ 'active' if in_wishlist }}" style="position:static;width:44px;height:44px;font-size:20px;" onclick="toggleWishlist({{ product.id }}, this)" id="wishBtn">
+          {{ '❤️' if in_wishlist else '🤍' }}
+        </button>
+      </div>
+
+      <div style="margin-top:20px;padding:16px;border:1px solid var(--border);border-radius:8px;">
+        <div style="display:flex;gap:20px;font-size:13px;color:var(--text-light);">
+          <span>🚚 Miễn phí vận chuyển</span>
+          <span>🔄 Đổi trả 7 ngày</span>
+          <span>✅ Hàng chính hãng</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="reviews-section">
+    <h2 style="font-size:18px;font-weight:700;margin-bottom:20px;">Đánh giá sản phẩm</h2>
+    {% if reviews %}
+    <div class="review-avg">
+      <div class="avg-score">{{ "%.1f"|format(avg_rating) }}</div>
+      <div>
+        <div style="font-size:24px;color:#f5a623;">{{ '★' * avg_rating|int }}{{ '☆' * (5 - avg_rating|int) }}</div>
+        <div style="font-size:13px;color:var(--text-light);">{{ reviews|length }} đánh giá</div>
+      </div>
+    </div>
+    {% for r in reviews %}
+    <div class="review-item">
+      <div class="review-header">
+        <span style="width:36px;height:36px;background:var(--primary);color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0;">{{ r.user_name[0] }}</span>
+        <span class="review-user">{{ r.user_name }}</span>
+        <span style="color:#f5a623;">{{ '★' * r.rating }}{{ '☆' * (5 - r.rating) }}</span>
+        <span class="review-date">{{ r.created_at[:10] }}</span>
+      </div>
+      <div class="review-comment">{{ r.comment }}</div>
+    </div>
+    {% endfor %}
+    {% else %}
+    <div style="color:var(--text-light);text-align:center;padding:20px;">Chưa có đánh giá nào. Hãy là người đầu tiên! ✨</div>
+    {% endif %}
+
+    {% if session.user_id %}
+    <div class="review-form">
+      <h3 style="font-size:15px;margin-bottom:12px;">Viết đánh giá của bạn</h3>
+      <form method="POST" action="/review/add">
+        <input type="hidden" name="product_id" value="{{ product.id }}">
+        <div style="margin-bottom:12px;">
+          <div style="font-size:13px;color:var(--text-light);margin-bottom:6px;">Chọn số sao</div>
+          <div class="star-select">
+            {% for i in [5,4,3,2,1] %}
+            <input type="radio" name="rating" id="star{{ i }}" value="{{ i }}" {{ 'checked' if i == 5 }}>
+            <label for="star{{ i }}">★</label>
+            {% endfor %}
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Nhận xét của bạn</label>
+          <textarea name="comment" rows="3" placeholder="Chia sẻ trải nghiệm của bạn về sản phẩm này..." style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;font-family:inherit;font-size:14px;resize:vertical;"></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary">Gửi đánh giá</button>
+      </form>
+    </div>
+    {% else %}
+    <div style="text-align:center;padding:20px;background:var(--bg);border-radius:8px;margin-top:16px;">
+      <a href="/login" style="color:var(--primary);font-weight:600;">Đăng nhập</a> để viết đánh giá
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+{% if related %}
+<div style="background:white;border-radius:8px;box-shadow:var(--shadow);margin-top:16px;overflow:hidden;">
+  <div class="section-header">
+    <div class="section-title">Sản phẩm tương tự</div>
+  </div>
+  <div class="product-grid">
+    {% for p in related %}
+    <div class="product-card" onclick="location.href='/product/{{ p.id }}'">
+      <img class="product-img" src="{{ p.image }}" alt="{{ p.name }}" onerror="this.src='https://picsum.photos/400/400?random={{ p.id + 50 }}'">
+      <div class="product-info">
+        <div class="product-name">{{ p.name }}</div>
+        <div class="product-price">
+          {% if p.sale_price %}
+          <span class="price-current">{{ "{:,.0f}đ".format(p.sale_price) }}</span>
+          <span class="price-original">{{ "{:,.0f}đ".format(p.price) }}</span>
+          {% else %}
+          <span class="price-current">{{ "{:,.0f}đ".format(p.price) }}</span>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+</div>
+
+<script>
+function changeQty(delta) {
+  const inp = document.getElementById('detailQty');
+  let v = parseInt(inp.value) + delta;
+  const max = {{ product.stock }};
+  if (v < 1) v = 1;
+  if (v > max) v = max;
+  inp.value = v;
+}
+function buyNow(pid) {
+  addToCart(pid, parseInt(document.getElementById('detailQty').value));
+  setTimeout(() => location.href = '/cart', 500);
+}
+</script>
+{% endblock %}

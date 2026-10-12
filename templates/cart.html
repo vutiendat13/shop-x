@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+{% block title %}Giỏ hàng - Shopx{% endblock %}
+{% block content %}
+<div class="container">
+<div style="margin:16px 0;">
+  <h1 style="font-size:20px;font-weight:700;margin-bottom:16px;">🛒 Giỏ hàng của bạn</h1>
+  {% if items %}
+  <div class="cart-page">
+    <div class="cart-header">
+      <span>Sản phẩm</span>
+      <span>Đơn giá</span>
+      <span>Số lượng</span>
+      <span>Thành tiền</span>
+      <span></span>
+    </div>
+    {% for item in items %}
+    <div class="cart-item">
+      <div class="cart-item-info">
+        <img class="cart-item-img" src="{{ item.image }}" alt="{{ item.name }}" onerror="this.src='https://picsum.photos/80/80?random={{ item.product_id }}'">
+        <a href="/product/{{ item.product_id }}" class="cart-item-name">{{ item.name }}</a>
+      </div>
+      <div class="cart-price">{{ "{:,.0f}đ".format(item.sale_price or item.price) }}</div>
+      <div class="qty-control" style="margin:0;">
+        <button class="qty-btn" onclick="updateQty({{ item.product_id }}, -1)">-</button>
+        <input type="number" id="qty-{{ item.product_id }}" class="qty-input" value="{{ item.quantity }}" min="1" max="{{ item.stock }}">
+        <button class="qty-btn" onclick="updateQty({{ item.product_id }}, 1)">+</button>
+      </div>
+      <div class="cart-price">{{ "{:,.0f}đ".format((item.sale_price or item.price) * item.quantity) }}</div>
+      <button onclick="removeCart({{ item.product_id }})" style="background:none;border:none;cursor:pointer;font-size:18px;color:var(--text-light);" title="Xóa">🗑️</button>
+    </div>
+    {% endfor %}
+    <div class="cart-footer">
+      <div>
+        <span style="font-size:13px;color:var(--text-light);">{{ items|length }} sản phẩm</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:20px;">
+        <div>Tổng cộng: <span class="cart-total">{{ "{:,.0f}đ".format(total) }}</span></div>
+        <a href="/checkout" class="btn btn-primary">Thanh toán</a>
+      </div>
+    </div>
+  </div>
+  {% else %}
+  <div style="text-align:center;padding:80px 20px;background:white;border-radius:8px;box-shadow:var(--shadow);">
+    <div style="font-size:80px;margin-bottom:20px;">🛒</div>
+    <h2>Giỏ hàng trống</h2>
+    <p style="color:var(--text-light);margin:12px 0 24px;">Hãy thêm sản phẩm vào giỏ hàng nhé!</p>
+    <a href="/products" class="btn btn-primary">Mua sắm ngay</a>
+  </div>
+  {% endif %}
+</div>
+</div>
+{% endblock %}

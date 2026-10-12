@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quản lý tồn kho - Admin</title>
+<link rel="stylesheet" href="/static/css/main.css">
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+<div class="admin-layout">
+  <aside class="admin-sidebar">
+    <a href="/" class="logo" style="display:flex;align-items:baseline;gap:2px;padding:20px;border-bottom:1px solid rgba(255,255,255,.1);">
+      <span class="logo-text">Shop</span><span class="logo-x">x</span><span class="logo-sub" style="color:#67e8f9;border-color:rgba(103,232,249,.3);">Admin</span>
+    </a>
+    <nav class="admin-nav">
+      <a href="/admin">📊 Dashboard</a>
+      <a href="/admin/products">📦 Sản phẩm</a>
+      <a href="/admin/inventory" class="active">📋 Tồn kho</a>
+      <a href="/admin/inventory">📋 Tồn kho</a>
+      <a href="/admin/orders">🛒 Đơn hàng</a>
+      <a href="/admin/flash-sales">⚡ Flash Sale</a>
+      <a href="/admin/notifications">🔔 Thông báo</a>
+      <a href="/">🏠 Về trang chủ</a>
+      <a href="/logout">🚪 Đăng xuất</a>
+    </nav>
+  </aside>
+  <div class="admin-content">
+    <div class="admin-topbar">
+      <h1 style="font-size:20px;font-weight:700;">📋 Quản lý tồn kho</h1>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <span class="status-badge status-pending" id="low-count"></span>
+        <input type="text" placeholder="Tìm sản phẩm..." oninput="filterTable(this.value)" style="padding:6px 12px;border:1px solid var(--border);border-radius:6px;font-family:inherit;">
+      </div>
+    </div>
+    <div class="admin-body">
+
+      <div class="stat-cards" style="grid-template-columns:repeat(3,1fr);">
+        <div class="stat-card">
+          <div class="stat-value" id="total-products">{{ products|length }}</div>
+          <div class="stat-label">Tổng sản phẩm</div>
+        </div>
+        <div class="stat-card" style="border-left-color:#ff9800;">
+          <div class="stat-value" style="color:#ff9800;" id="low-stock-count">{{ products|selectattr('stock','lt',10)|list|length }}</div>
+          <div class="stat-label">Sắp hết hàng (&lt;10)</div>
+        </div>
+        <div class="stat-card" style="border-left-color:#f44336;">
+          <div class="stat-value" style="color:#f44336;">{{ products|selectattr('stock','eq',0)|list|length }}</div>
+          <div class="stat-label">Hết hàng</div>
+        </div>
+      </div>
+
+      <div class="admin-card">
+        <div class="admin-card-header">
+          <h2>Danh sách tồn kho (sắp xếp theo số lượng tăng dần)</h2>
+          <div style="display:flex;gap:8px;">
+            <button class="btn btn-outline btn-sm" onclick="filterLow()">⚠️ Chỉ hàng sắp hết</button>
+            <button class="btn btn-outline btn-sm" onclick="filterTable('')">Xem tất cả</button>
+          </div>
+        </div>
+        <div style="overflow-x:auto;">
+          <table class="admin-table" id="inventoryTable">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Ảnh</th>
+                <th>Sản phẩm</th>
+                <th>Danh mục</th>
+                <th>Giá bán</th>
+                <th>Đã bán</th>
+                <th style="min-width:160px;">Tồn kho</th>
+                <th>Trạng thái</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for p in products %}
+              <tr data-stock="{{ p.stock }}" data-name="{{ p.name|lower }}">
+                <td>{{ p.id }}</td>
+                <td><img src="{{ p.image }}" onerror="this.src='https://picsum.photos/48/48?random={{ p.id }}'"></td>
+                <td style="max-width:180px;font-size:13px;">{{ p.name }}</td>
+                <td style="font-size:12px;color:var(--text-light);">{{ p.cat_name }}</td>
+                <td style="color:var(--primary);font-weight:600;font-size:13px;">
+                  {{ "{:,.0f}đ".format(p.sale_price or p.price) }}
+                </td>
+                <td style="font-size:13px;">{{ p.sold }}</td>
+                <td>
+                  <div style="display:flex;align-items:center;gap:8px;">
+                    <div style="flex:1;background:#eee;border-radius:4px;height:8px;overflow:hidden;max-width:80px;">
+                      <div style="background:{{ '#4caf50' if p.stock >= 20 else ('#ff9800' if p.stock >= 5 else '#f44336') }};height:100%;width:{{ [100, p.stock * 2]|min }}%;transition:width .3s;"></div>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:4px;">
+                      <button onclick="adjustStock({{ p.id }}, -1, this)" style="background:none;border:1px solid var(--border);width:24px;height:24px;border-radius:4px;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;">-</button>
+                      <input type="number" id="stock-{{ p.id }}" value="{{ p.stock }}" min="0" style="width:60px;text-align:center;border:1px solid var(--border);border-radius:4px;padding:3px 4px;font-family:inherit;font-size:13px;" onchange="saveStock({{ p.id }})">
+                      <button onclick="adjustStock({{ p.id }}, 1, this)" style="background:none;border:1px solid var(--border);width:24px;height:24px;border-radius:4px;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;">+</button>
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  {% if p.stock == 0 %}
+                  <span class="status-badge status-pending">Hết hàng</span>
+                  {% elif p.stock < 10 %}
+                  <span class="status-badge" style="background:#fff3e0;color:#e65100;">⚠️ Sắp hết</span>
+                  {% else %}
+                  <span class="status-badge status-delivered">Còn hàng</span>
+                  {% endif %}
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+function filterTable(q) {
+  const rows = document.querySelectorAll('#inventoryTable tbody tr');
+  rows.forEach(r => {
+    r.style.display = r.dataset.name.includes(q.toLowerCase()) ? '' : 'none';
+  });
+}
+function filterLow() {
+  const rows = document.querySelectorAll('#inventoryTable tbody tr');
+  rows.forEach(r => {
+    r.style.display = parseInt(r.dataset.stock) < 10 ? '' : 'none';
+  });
+}
+function adjustStock(pid, delta, btn) {
+  const inp = document.getElementById('stock-' + pid);
+  let v = parseInt(inp.value) + delta;
+  if (v < 0) v = 0;
+  inp.value = v;
+  saveStock(pid);
+}
+function saveStock(pid) {
+  const stock = document.getElementById('stock-' + pid).value;
+  const fd = new FormData();
+  fd.append('product_id', pid);
+  fd.append('stock', stock);
+  fetch('/admin/inventory/update', { method: 'POST', body: fd })
+    .then(r => r.json())
+    .then(d => {
+      if (d.success) {
+        const row = document.querySelector(`tr[data-stock]`);
+        // Visual feedback
+        const inp = document.getElementById('stock-' + pid);
+        inp.style.borderColor = '#4caf50';
+        setTimeout(() => inp.style.borderColor = '', 1000);
+      }
+    });
+}
+</script>
+</body>
+</html>

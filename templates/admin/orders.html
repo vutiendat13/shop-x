@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quản lý đơn hàng - Admin</title>
+<link rel="stylesheet" href="/static/css/main.css">
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+<div class="admin-layout">
+  <aside class="admin-sidebar">
+    <a href="/" class="logo" style="display:flex;align-items:baseline;gap:2px;padding:20px;border-bottom:1px solid rgba(255,255,255,.1);">
+      <span class="logo-text">Shop</span><span class="logo-x">x</span><span class="logo-sub" style="color:#67e8f9;border-color:rgba(103,232,249,.3);">Admin</span>
+    </a>
+    <nav class="admin-nav">
+      <a href="/admin">📊 Dashboard</a>
+      <a href="/admin/products">📦 Sản phẩm</a>
+      <a href="/admin/orders" class="active">🛒 Đơn hàng</a>
+      <a href="/admin/flash-sales">⚡ Flash Sale</a>
+      <a href="/admin/notifications">🔔 Thông báo</a>
+      <a href="/">🏠 Về trang chủ</a>
+      <a href="/logout">🚪 Đăng xuất</a>
+    </nav>
+  </aside>
+  <div class="admin-content">
+    <div class="admin-topbar">
+      <h1 style="font-size:20px;font-weight:700;">🛒 Quản lý đơn hàng</h1>
+      <div style="display:flex;gap:8px;">
+        <span class="status-badge status-pending">Chờ: {{ orders|selectattr('status','eq','pending')|list|length }}</span>
+        <span class="status-badge status-shipping">Đang giao: {{ orders|selectattr('status','eq','shipping')|list|length }}</span>
+        <span class="status-badge status-delivered">Đã giao: {{ orders|selectattr('status','eq','delivered')|list|length }}</span>
+      </div>
+    </div>
+    <div class="admin-body">
+      <div class="admin-card">
+        <div class="admin-card-header">
+          <span>{{ orders|length }} đơn hàng</span>
+          <select onchange="filterStatus(this.value)" style="padding:6px 12px;border:1px solid var(--border);border-radius:6px;font-family:inherit;">
+            <option value="">Tất cả trạng thái</option>
+            <option value="pending">Chờ xác nhận</option>
+            <option value="shipping">Đang giao</option>
+            <option value="delivered">Đã giao</option>
+          </select>
+        </div>
+        <div style="overflow-x:auto;">
+          <table class="admin-table" id="ordersTable">
+            <thead>
+              <tr>
+                <th>Mã đơn</th>
+                <th>Khách hàng</th>
+                <th>Email</th>
+                <th>Địa chỉ giao</th>
+                <th>Tổng tiền</th>
+                <th>Trạng thái</th>
+                <th>Ngày đặt</th>
+                <th>Cập nhật</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for o in orders %}
+              <tr data-status="{{ o.status }}">
+                <td><strong>#{{ o.id }}</strong></td>
+                <td>{{ o.user_name }}</td>
+                <td style="font-size:12px;color:var(--text-light);">{{ o.email }}</td>
+                <td style="font-size:12px;max-width:150px;">{{ o.address or 'N/A' }}</td>
+                <td style="color:var(--primary);font-weight:600;">{{ "{:,.0f}đ".format(o.total) }}</td>
+                <td>
+                  {% if o.status == 'pending' %}<span class="status-badge status-pending">⏳ Chờ xác nhận</span>
+                  {% elif o.status == 'shipping' %}<span class="status-badge status-shipping">🚚 Đang giao</span>
+                  {% else %}<span class="status-badge status-delivered">✅ Đã giao</span>{% endif %}
+                </td>
+                <td style="font-size:12px;color:var(--text-light);">{{ o.created_at[:16] }}</td>
+                <td>
+                  <form method="POST" action="/admin/orders/update" style="display:flex;gap:4px;">
+                    <input type="hidden" name="order_id" value="{{ o.id }}">
+                    <select name="status" style="padding:4px;border:1px solid var(--border);border-radius:4px;font-size:12px;font-family:inherit;">
+                      <option value="pending" {{ 'selected' if o.status == 'pending' }}>Chờ xác nhận</option>
+                      <option value="shipping" {{ 'selected' if o.status == 'shipping' }}>Đang giao</option>
+                      <option value="delivered" {{ 'selected' if o.status == 'delivered' }}>Đã giao</option>
+                    </select>
+                    <button type="submit" class="btn btn-primary btn-sm">✓</button>
+                  </form>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+function filterStatus(status) {
+  document.querySelectorAll('#ordersTable tbody tr').forEach(r => {
+    r.style.display = (!status || r.dataset.status === status) ? '' : 'none';
+  });
+}
+</script>
+</body>
+</html>

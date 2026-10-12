@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+{% block title %}Trang không tìm thấy - Shopx{% endblock %}
+{% block content %}
+<div style="text-align:center;padding:80px 20px;min-height:60vh;display:flex;flex-direction:column;align-items:center;justify-content:center;">
+  <div style="font-size:120px;line-height:1;margin-bottom:20px;">🛍️</div>
+  <h1 style="font-size:48px;font-weight:800;color:var(--primary);margin-bottom:8px;">404</h1>
+  <h2 style="font-size:22px;font-weight:600;margin-bottom:12px;">Ôi không! Trang này không tồn tại</h2>
+  <p style="color:var(--text-light);font-size:15px;max-width:420px;line-height:1.6;margin-bottom:28px;">
+    Có thể trang bạn tìm kiếm đã bị xóa, đổi tên hoặc tạm thời không khả dụng.
+  </p>
+  <div style="display:flex;gap:12px;">
+    <a href="/" class="btn btn-primary">🏠 Về trang chủ</a>
+    <a href="/products" class="btn btn-outline">🛒 Tiếp tục mua sắm</a>
+  </div>
+</div>
+{% endblock %}

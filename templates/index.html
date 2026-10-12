@@ -1,0 +1,179 @@
+{% extends 'base.html' %}
+{% block title %}Shopx - Mua sắm online giá tốt{% endblock %}
+{% block content %}
+
+{% if notification %}
+<div class="popup-overlay show" id="popupNotif">
+  <div class="popup-box">
+    <button class="popup-close" onclick="document.getElementById('popupNotif').classList.remove('show')">✕</button>
+    <div style="font-size:48px;margin-bottom:12px;">🎉</div>
+    <div class="popup-title">{{ notification.title }}</div>
+    <div class="popup-msg">{{ notification.message }}</div>
+    <button class="btn btn-primary" onclick="document.getElementById('popupNotif').classList.remove('show')">Xem ngay</button>
+  </div>
+</div>
+{% endif %}
+
+{% if banner %}
+<div class="banner-notif">📢 {{ banner.title }}: {{ banner.message }}</div>
+{% endif %}
+
+<div class="hero-banner">
+  <div class="container">
+    <div class="hero-content">
+      <div class="hero-text">
+        <div class="hero-badge">🔥 Siêu sale hôm nay</div>
+        <h1 class="hero-title">Mua sắm thả ga<br><span>Giá cực sốc!</span></h1>
+        <p class="hero-desc">Hàng ngàn sản phẩm giảm giá lên đến 70% — Giao hàng miễn phí toàn quốc</p>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;">
+          <a href="/products?sale=1" class="btn btn-primary" style="background:white;color:var(--primary);font-size:15px;padding:14px 28px;">🛍️ Mua ngay</a>
+          <a href="/products" class="btn" style="background:rgba(255,255,255,.2);color:white;border:2px solid rgba(255,255,255,.6);font-size:15px;padding:14px 28px;">Khám phá thêm</a>
+        </div>
+      </div>
+      <div class="hero-stats">
+        <div class="hero-stat"><span class="hero-stat-num">85+</span><span>Sản phẩm</span></div>
+        <div class="hero-stat"><span class="hero-stat-num">17</span><span>Danh mục</span></div>
+        <div class="hero-stat"><span class="hero-stat-num">100%</span><span>Chính hãng</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+
+{% if flash_sales %}
+<section class="flash-sale-section">
+  <div class="section-header">
+    <div class="section-title">
+      ⚡ FLASH SALE
+      <div class="countdown">
+        KẾT THÚC TRONG
+        <div class="countdown-block" id="countdown-h">00</div>
+        <span>:</span>
+        <div class="countdown-block" id="countdown-m">00</div>
+        <span>:</span>
+        <div class="countdown-block" id="countdown-s">00</div>
+      </div>
+    </div>
+    <a href="{{ url_for('products', sale=1) }}" class="see-all">Xem tất cả ›</a>
+  </div>
+  <div class="product-grid">
+    {% for p in flash_sales %}
+    <div class="product-card" onclick="location.href='/product/{{ p.product_id }}'">
+      <img class="product-img" src="{{ p.image }}" alt="{{ p.name }}" onerror="this.src='https://picsum.photos/400/400?random={{ loop.index }}'">
+      <div class="product-info">
+        <div class="product-name">{{ p.name }}</div>
+        <div class="product-price">
+          <span class="price-current">{{ "{:,.0f}đ".format(p.price * (100 - p.discount_percent) / 100) }}</span>
+          <span class="price-original">{{ "{:,.0f}đ".format(p.price) }}</span>
+          <span class="price-badge">-{{ p.discount_percent }}%</span>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+<script>startCountdown("{{ flash_sales[0].end_time }}");</script>
+{% endif %}
+
+<section class="categories-section">
+  <div class="section-header">
+    <div class="section-title">🗂️ Danh mục sản phẩm</div>
+  </div>
+  <div class="categories-grid">
+    {% for cat in categories %}
+    <div class="category-item" onclick="location.href='/products?cat={{ cat.id }}'">
+      <span class="category-icon">{{ cat.icon }}</span>
+      <div class="category-name">{{ cat.name }}</div>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+
+<section class="flash-sale-section">
+  <div class="section-header">
+    <div class="section-title">🔥 Hàng Sale Giảm Giá</div>
+    <a href="{{ url_for('products', sale=1) }}" class="see-all">Xem tất cả ›</a>
+  </div>
+  <div class="product-grid">
+    {% for p in sale_products %}
+    <div class="product-card">
+      <button class="wishlist-btn {{ 'active' if p.id in wishlist_ids }}" onclick="event.stopPropagation(); toggleWishlist({{ p.id }}, this)">{{ '❤️' if p.id in wishlist_ids else '🤍' }}</button>
+      <img class="product-img" src="{{ p.image }}" alt="{{ p.name }}" onclick="location.href='/product/{{ p.id }}'" onerror="this.src='https://picsum.photos/400/400?random={{ p.id }}'">
+      <div class="product-info">
+        <div class="product-name" onclick="location.href='/product/{{ p.id }}'">{{ p.name }}</div>
+        <div class="product-price">
+          <span class="price-current">{{ "{:,.0f}đ".format(p.sale_price) }}</span>
+          <span class="price-original">{{ "{:,.0f}đ".format(p.price) }}</span>
+          <span class="price-badge">-{{ ((p.price - p.sale_price) / p.price * 100)|int }}%</span>
+        </div>
+        <div class="product-sold">Đã bán {{ p.sold }}</div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+
+<section class="flash-sale-section">
+  <div class="section-header">
+    <div class="section-title">📈 Sản phẩm bán chạy</div>
+    <a href="{{ url_for('products', sort='hot') }}" class="see-all">Xem tất cả ›</a>
+  </div>
+  <div class="product-grid">
+    {% for p in hot_products %}
+    <div class="product-card">
+      <button class="wishlist-btn {{ 'active' if p.id in wishlist_ids }}" onclick="event.stopPropagation(); toggleWishlist({{ p.id }}, this)">{{ '❤️' if p.id in wishlist_ids else '🤍' }}</button>
+      <img class="product-img" src="{{ p.image }}" alt="{{ p.name }}" onclick="location.href='/product/{{ p.id }}'" onerror="this.src='https://picsum.photos/400/400?random={{ p.id + 100 }}'">
+      <div class="product-info">
+        <div class="product-name" onclick="location.href='/product/{{ p.id }}'">{{ p.name }}</div>
+        <div class="product-price">
+          {% if p.sale_price %}
+          <span class="price-current">{{ "{:,.0f}đ".format(p.sale_price) }}</span>
+          <span class="price-original">{{ "{:,.0f}đ".format(p.price) }}</span>
+          {% else %}
+          <span class="price-current">{{ "{:,.0f}đ".format(p.price) }}</span>
+          {% endif %}
+        </div>
+        <div class="product-sold">Đã bán {{ p.sold }}</div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+
+<section class="flash-sale-section">
+  <div class="section-header">
+    <div class="section-title">🆕 Hàng mới về</div>
+    <a href="{{ url_for('products', sort='new') }}" class="see-all">Xem tất cả ›</a>
+  </div>
+  <div class="product-grid">
+    {% for p in new_products %}
+    <div class="product-card">
+      <button class="wishlist-btn {{ 'active' if p.id in wishlist_ids }}" onclick="event.stopPropagation(); toggleWishlist({{ p.id }}, this)">{{ '❤️' if p.id in wishlist_ids else '🤍' }}</button>
+      <img class="product-img" src="{{ p.image }}" alt="{{ p.name }}" onclick="location.href='/product/{{ p.id }}'" onerror="this.src='https://picsum.photos/400/400?random={{ p.id + 200 }}'">
+      <div class="product-info">
+        <div class="product-name" onclick="location.href='/product/{{ p.id }}'">{{ p.name }}</div>
+        <div class="product-price">
+          {% if p.sale_price %}
+          <span class="price-current">{{ "{:,.0f}đ".format(p.sale_price) }}</span>
+          <span class="price-original">{{ "{:,.0f}đ".format(p.price) }}</span>
+          {% else %}
+          <span class="price-current">{{ "{:,.0f}đ".format(p.price) }}</span>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+
+<div class="promo-strip">
+  <div class="promo-item">🚚 <strong>Miễn phí vận chuyển</strong> đơn từ 150k</div>
+  <div class="promo-item">🔄 <strong>Đổi trả dễ dàng</strong> trong 7 ngày</div>
+  <div class="promo-item">🛡️ <strong>Hàng chính hãng</strong> 100% đảm bảo</div>
+  <div class="promo-item">💳 <strong>Thanh toán an toàn</strong> đa dạng hình thức</div>
+</div>
+
+</div>
+{% endblock %}
+

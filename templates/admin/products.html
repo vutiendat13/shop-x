@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quản lý sản phẩm - Admin</title>
+<link rel="stylesheet" href="/static/css/main.css">
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+<div class="admin-layout">
+  <aside class="admin-sidebar">
+    <a href="/" class="logo" style="display:flex;align-items:baseline;gap:2px;padding:20px;border-bottom:1px solid rgba(255,255,255,.1);">
+      <span class="logo-text">Shop</span><span class="logo-x">x</span><span class="logo-sub" style="color:#67e8f9;border-color:rgba(103,232,249,.3);">Admin</span>
+    </a>
+    <nav class="admin-nav">
+      <a href="/admin">📊 Dashboard</a>
+      <a href="/admin/products" class="active">📦 Sản phẩm</a>
+      <a href="/admin/inventory">📋 Tồn kho</a>
+      <a href="/admin/orders">🛒 Đơn hàng</a>
+      <a href="/admin/flash-sales">⚡ Flash Sale</a>
+      <a href="/admin/notifications">🔔 Thông báo</a>
+      <a href="/">🏠 Về trang chủ</a>
+      <a href="/logout">🚪 Đăng xuất</a>
+    </nav>
+  </aside>
+  <div class="admin-content">
+    <div class="admin-topbar">
+      <h1 style="font-size:20px;font-weight:700;">📦 Quản lý sản phẩm</h1>
+      <button class="btn btn-primary" onclick="document.getElementById('addModal').classList.add('show')">+ Thêm sản phẩm</button>
+    </div>
+    <div class="admin-body">
+      <div class="admin-card">
+        <div class="admin-card-header">
+          <span>{{ products|length }} sản phẩm</span>
+          <input type="text" placeholder="Tìm sản phẩm..." oninput="filterTable(this.value)" style="padding:6px 12px;border:1px solid var(--border);border-radius:6px;font-family:inherit;">
+        </div>
+        <div style="overflow-x:auto;">
+          <table class="admin-table" id="productTable">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Ảnh</th>
+                <th>Tên sản phẩm</th>
+                <th>Danh mục</th>
+                <th>Giá gốc</th>
+                <th>Giá sale</th>
+                <th>Tồn kho</th>
+                <th>Đã bán</th>
+                <th>Thao tác</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for p in products %}
+              <tr>
+                <td>{{ p.id }}</td>
+                <td><img src="{{ p.image }}" onerror="this.src='https://picsum.photos/48/48?random={{ p.id }}'"></td>
+                <td style="max-width:200px;">{{ p.name }}</td>
+                <td>{{ p.cat_name }}</td>
+                <td>{{ "{:,.0f}đ".format(p.price) }}</td>
+                <td>{% if p.sale_price %}<span style="color:var(--primary);">{{ "{:,.0f}đ".format(p.sale_price) }}</span>{% else %}-{% endif %}</td>
+                <td>
+                  <span style="color:{{ 'var(--primary)' if p.stock < 5 else 'inherit' }};font-weight:{{ '700' if p.stock < 5 else 'normal' }};">{{ p.stock }}</span>
+                </td>
+                <td>{{ p.sold }}</td>
+                <td>
+                  <div style="display:flex;gap:6px;">
+                    <a href="/admin/products/edit/{{ p.id }}" class="btn btn-outline btn-sm">✏️</a>
+                    <form method="POST" action="/admin/products/delete/{{ p.id }}" onsubmit="return confirm('Xóa sản phẩm này?')">
+                      <button type="submit" class="btn btn-danger btn-sm">🗑️</button>
+                    </form>
+                  </div>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="addModal">
+  <div class="modal-box" style="max-width:560px;">
+    <div class="modal-header">
+      <h2>Thêm sản phẩm mới</h2>
+      <button onclick="document.getElementById('addModal').classList.remove('show')" style="background:none;border:none;font-size:20px;cursor:pointer;">✕</button>
+    </div>
+    <form method="POST" action="/admin/products/add" enctype="multipart/form-data">
+      <div class="form-group">
+        <label>Tên sản phẩm</label>
+        <input type="text" name="name" required>
+      </div>
+      <div class="form-group">
+        <label>Mô tả</label>
+        <textarea name="description" rows="2" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;font-family:inherit;"></textarea>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Giá gốc (đ)</label>
+          <input type="number" name="price" required min="0">
+        </div>
+        <div class="form-group">
+          <label>Giá sale (đ, để trống nếu không)</label>
+          <input type="number" name="sale_price" min="0">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Tồn kho</label>
+          <input type="number" name="stock" required min="0" value="100">
+        </div>
+        <div class="form-group">
+          <label>Danh mục</label>
+          <select name="category_id" required>
+            {% for c in categories %}
+            <option value="{{ c.id }}">{{ c.icon }} {{ c.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>URL ảnh (hoặc upload bên dưới)</label>
+        <input type="text" name="image_url" placeholder="https://...">
+      </div>
+      <div class="form-group">
+        <label>Upload ảnh</label>
+        <input type="file" name="image" accept="image/*">
+      </div>
+      <div style="display:flex;gap:12px;justify-content:flex-end;margin-top:20px;">
+        <button type="button" onclick="document.getElementById('addModal').classList.remove('show')" class="btn btn-outline">Hủy</button>
+        <button type="submit" class="btn btn-primary">Thêm sản phẩm</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+function filterTable(q) {
+  const rows = document.querySelectorAll('#productTable tbody tr');
+  rows.forEach(r => {
+    r.style.display = r.textContent.toLowerCase().includes(q.toLowerCase()) ? '' : 'none';
+  });
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Flash Sale - Admin</title>
+<link rel="stylesheet" href="/static/css/main.css">
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+<div class="admin-layout">
+  <aside class="admin-sidebar">
+    <a href="/" class="logo" style="display:flex;align-items:baseline;gap:2px;padding:20px;border-bottom:1px solid rgba(255,255,255,.1);">
+      <span class="logo-text">Shop</span><span class="logo-x">x</span><span class="logo-sub" style="color:#67e8f9;border-color:rgba(103,232,249,.3);">Admin</span>
+    </a>
+    <nav class="admin-nav">
+      <a href="/admin">📊 Dashboard</a>
+      <a href="/admin/products">📦 Sản phẩm</a>
+      <a href="/admin/inventory">📋 Tồn kho</a>
+      <a href="/admin/orders">🛒 Đơn hàng</a>
+      <a href="/admin/flash-sales" class="active">⚡ Flash Sale</a>
+      <a href="/admin/notifications">🔔 Thông báo</a>
+      <a href="/">🏠 Về trang chủ</a>
+      <a href="/logout">🚪 Đăng xuất</a>
+    </nav>
+  </aside>
+  <div class="admin-content">
+    <div class="admin-topbar">
+      <h1 style="font-size:20px;font-weight:700;">⚡ Quản lý Flash Sale</h1>
+    </div>
+    <div class="admin-body">
+      <div style="display:grid;grid-template-columns:380px 1fr;gap:16px;">
+        <div class="admin-card" style="align-self:start;">
+          <div class="admin-card-header"><h2>Tạo Flash Sale mới</h2></div>
+          <div style="padding:20px;">
+            <form method="POST">
+              <div class="form-group">
+                <label>Chọn sản phẩm</label>
+                <select name="product_id" required style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;font-family:inherit;">
+                  {% for p in products %}
+                  <option value="{{ p.id }}">{{ p.name }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Phần trăm giảm giá (%)</label>
+                <input type="number" name="discount_percent" required min="1" max="99" value="20">
+              </div>
+              <div class="form-group">
+                <label>Bắt đầu</label>
+                <input type="datetime-local" name="start_time" required id="startTime">
+              </div>
+              <div class="form-group">
+                <label>Kết thúc</label>
+                <input type="datetime-local" name="end_time" required id="endTime">
+              </div>
+              <button type="submit" class="btn btn-primary" style="width:100%;">⚡ Tạo Flash Sale</button>
+            </form>
+          </div>
+        </div>
+
+        <div class="admin-card">
+          <div class="admin-card-header"><h2>Danh sách Flash Sale</h2></div>
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Sản phẩm</th>
+                <th>Giảm giá</th>
+                <th>Bắt đầu</th>
+                <th>Kết thúc</th>
+                <th>Trạng thái</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for fs in flash_sales %}
+              <tr>
+                <td>{{ fs.id }}</td>
+                <td>{{ fs.name[:40] }}{% if fs.name|length > 40 %}...{% endif %}</td>
+                <td><span class="price-badge" style="font-size:13px;padding:3px 8px;">-{{ fs.discount_percent }}%</span></td>
+                <td style="font-size:12px;">{{ fs.start_time[:16] }}</td>
+                <td style="font-size:12px;">{{ fs.end_time[:16] }}</td>
+                <td>
+                  <span class="status-badge status-delivered" id="status-{{ fs.id }}">Đang chạy</span>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+const now = new Date();
+const pad = n => n.toString().padStart(2, '0');
+const localNow = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`;
+const localEnd = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}T${pad(now.getHours() + 6)}:${pad(now.getMinutes())}`;
+document.getElementById('startTime').value = localNow;
+document.getElementById('endTime').value = localEnd;
+</script>
+</body>
+</html>
